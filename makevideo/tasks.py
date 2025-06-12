@@ -1,9 +1,11 @@
 import uuid
 
+import requests
 from celery import shared_task
 
-from makevideo.helpers import get_audio_from_text, transcribe_audio_with_whisper, generate_ass_file, generate_video_url, \
-    generate_thumbnail_url, delete_file_from_minio
+from brainrot.settings import GENERATE_VIDEO_URL, GENERATE_VIDEO_SECRET
+
+from makevideo.helpers import delete_file_from_minio
 from makevideo.models import TaskModel
 
 
@@ -14,23 +16,28 @@ def generate_video(useduuid:str):
     useduuid=str(task.useduuid)
     text=task.text
     try:
-        audio_url=get_audio_from_text(text,useduuid)
-        task.percentage=33
-        task.save()
-        subtitles_array=transcribe_audio_with_whisper(audio_url,"base")
-        ass_url=generate_ass_file(subtitles_array,useduuid)
-        task.percentage = 66
-        task.save()
-        video_url=generate_video_url(audio_url,ass_url,useduuid)
-        thumbnail_url=generate_thumbnail_url(video_url,useduuid)
+        send_data={
+            "text": text,
+            "voice":str(task.voice),
+            "speed":float(task.speed),
+            "bg_video_url":str(task.bg_video_url),
+            "useduuid":str(useduuid),
+        }
+        headers = {
+            "access_token": GENERATE_VIDEO_SECRET,
+            "Content-Type": "application/json"
+        }
+        response=requests.post(GENERATE_VIDEO_URL,json=send_data,headers=headers)
+        response.raise_for_status()
+        data=response.json()
+        data=data["data"]
         task.status="SUCCESS"
         task.percentage = 100
-        task.video_url=video_url
-        task.audio_url=audio_url
-        task.thumbnail_url=thumbnail_url
-        task.ass_url=ass_url
+        task.video_url=data["video_url"]
+        task.audio_url=data["audio_url"]
+        task.thumbnail_url=data["thumbnail_url"]
+        task.ass_url=data["ass_url"]
         task.save()
-        print(video_url)
     except Exception as e:
         task.status="FAILURE"
         task.percentage=100

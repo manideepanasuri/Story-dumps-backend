@@ -9,5 +9,7 @@ urlpatterns = [
     path('get-pending-tasks/', TasksModelPendingListView.as_view(), name='get-pending-tasks'),
     path('get-failure-tasks/', TasksModelFailureListView.as_view(), name='get-failure-tasks'),
     path('delete-task/',DeleteTaskView.as_view(), name='delete-task'),
+    path('get-bg-videos/',GetAllBackgroundModelView.as_view(), name='get-bg-videos'),
+    path('get-voices/',GetVoiceModelView.as_view(), name='get-voices'),
 
 ]
