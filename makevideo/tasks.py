@@ -24,7 +24,7 @@ def generate_video(useduuid:str):
             "useduuid":str(useduuid),
         }
         headers = {
-            "access_token": GENERATE_VIDEO_SECRET,
+            "access-token": GENERATE_VIDEO_SECRET,
             "Content-Type": "application/json"
         }
         response=requests.post(GENERATE_VIDEO_URL,json=send_data,headers=headers)
